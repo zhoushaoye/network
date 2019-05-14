@@ -1,5 +1,5 @@
-<resources>
-    <string name="app_name">network</string>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="ExtraTranslation">
+    <string name="app_name">dolphinframework</string>
     <string name="title_activity_main2">Main2Activity</string>
     <string name="title_activity_login">Sign in</string>
     <string name="prompt_email">Email</string>
@@ -10,4 +10,7 @@
     <string name="invalid_username">Not a valid username</string>
     <string name="invalid_password">Password must be >5 characters</string>
     <string name="login_failed">"Login failed"</string>
+    <string name="status_empty_tip">My Application</string>
+    <string name="refresh_no_more_data">My Application</string>
+    <string name="status_error_tip">My Application</string>
 </resources>

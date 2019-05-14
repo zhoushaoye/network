@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="RadioImageView">
+        <attr format="boolean" name="checked"/>
+    </declare-styleable>
+    <declare-styleable name="RadioTextView">
+        <attr format="dimension" name="left_drawable_width"/>
+        <attr format="dimension" name="left_drawable_height"/>
+        <attr format="dimension" name="top_drawable_width"/>
+        <attr format="dimension" name="top_drawable_height"/>
+        <attr format="dimension" name="right_drawable_width"/>
+        <attr format="dimension" name="right_drawable_height"/>
+        <attr format="dimension" name="bottom_drawable_width"/>
+        <attr format="dimension" name="bottom_drawable_height"/>
+    </declare-styleable>
+    <declare-styleable name="StatusToolbar">
+        <attr format="boolean" name="show_toolbar"/>
+        <attr format="color|reference" name="status_background"/>
+    </declare-styleable>
+</resources>

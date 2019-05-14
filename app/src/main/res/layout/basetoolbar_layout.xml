@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.example.a12877.myapplication.base.widget.StatusToolbar xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="54dip"
+    android:background="#00ff00"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/id_tool_bar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        app:contentInsetStartWithNavigation="48dp"
+        app:navigationIcon="?attr/homeAsUpIndicator">
+
+        <ImageView
+            android:id="@+id/left_imageView"
+            android:layout_width="100dip"
+            android:layout_height="20dip"
+            android:layout_centerInParent="true"
+            android:background="#ff0000"
+            android:layout_gravity="left"/>
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:singleLine="true"
+            android:maxLines="1"
+            android:textColor="#ff00ff"
+            android:text="Title"
+            android:textSize="16dip"
+            android:textStyle="normal"
+            android:ellipsize="end"/>
+
+        <TextView
+            android:id="@+id/right_textview"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:layout_gravity="right"
+            android:singleLine="true"
+            android:maxLines="1"
+            android:textColor="#ff00ff"
+            android:text="Right"
+            android:textSize="16dip"
+            android:textStyle="normal"
+            android:ellipsize="end"/>
+    </androidx.appcompat.widget.Toolbar>
+
+</com.example.a12877.myapplication.base.widget.StatusToolbar>
