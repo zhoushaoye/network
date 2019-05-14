@@ -1,47 +1,39 @@
-/*
- * Copyright (C) 2017 zhouyou(478319399@qq.com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.midea.network.http.subsciber;
 
 import android.content.Context;
 
+import com.midea.network.http.callback.IHttpCallBack;
+import com.midea.network.http.callback.ProgressHttpCallBack;
+import com.midea.network.http.exception.HttpException;
+import com.midea.network.http.exception.ServiceNullException;
+import com.midea.network.http.model.IApiResult;
+import com.midea.network.http.utils.HttpLogUtil;
 
-import com.midea.network.http.callback.CallBack;
-import com.midea.network.http.callback.ProgressDialogCallBack;
-import com.midea.network.http.exception.ApiException;
 
 import io.reactivex.annotations.NonNull;
 
 
 /**
- * <p>描述：带有callBack的回调</p>
- * 主要作用是不需要用户订阅，只要实现callback回调<br>
- * 作者： zhouyou<br>
- * 日期： 2016/12/28 17:10<br>
- * 版本： v2.0<br>
+ * 使用HttpCallBack进行回调,简化调用者的处理
+ *
+ * @author zhoudingjun
+ * @version 1.0
+ * @since 2019/5/13
  */
 public class CallBackSubsciber<T> extends BaseSubscriber<T> {
-    public CallBack<T> mCallBack;
-    
 
-    public CallBackSubsciber(Context context, CallBack<T> callBack) {
+    private IHttpCallBack<T> mCallBack;
+
+
+    public CallBackSubsciber(Context context) {
+        super(context);
+    }
+
+    public CallBackSubsciber(Context context,IHttpCallBack<T> callBack) {
         super(context);
         mCallBack = callBack;
-        if (callBack instanceof ProgressDialogCallBack) {
-            ((ProgressDialogCallBack) callBack).subscription(this);
+        if (callBack instanceof ProgressHttpCallBack) {
+            ((ProgressHttpCallBack) callBack).subscription(this);
         }
     }
 
@@ -53,9 +45,9 @@ public class CallBackSubsciber<T> extends BaseSubscriber<T> {
             mCallBack.onStart();
         }
     }
-    
+
     @Override
-    public void onError(ApiException e) {
+    public void onError(HttpException e) {
         if (mCallBack != null) {
             mCallBack.onError(e);
         }
@@ -64,8 +56,21 @@ public class CallBackSubsciber<T> extends BaseSubscriber<T> {
     @Override
     public void onNext(@NonNull T t) {
         super.onNext(t);
-        if (mCallBack != null) {
-            mCallBack.onSuccess(t);
+        if (t == null) {
+            onError(HttpException.handleException(new ServiceNullException("Http respons is null ...")));
+        } else {
+            if (t instanceof IApiResult) {
+                IApiResult<T> apiResult = (IApiResult<T>) t;
+                if (mCallBack != null) {
+                    mCallBack.onSuccess(apiResult);
+                }else {
+                    HttpLogUtil.e("Http callback is null  ...");
+                }
+            } else {
+                onError(HttpException.handleException(
+                        new HttpException("Not found zhe allow result map,you must implement IApiResult<T> ..."+t)));
+            }
+
         }
     }
 
@@ -73,7 +78,8 @@ public class CallBackSubsciber<T> extends BaseSubscriber<T> {
     public void onComplete() {
         super.onComplete();
         if (mCallBack != null) {
-            mCallBack.onCompleted();
+            mCallBack.onComplete();
         }
     }
+
 }

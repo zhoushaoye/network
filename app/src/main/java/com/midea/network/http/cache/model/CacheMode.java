@@ -1,74 +1,50 @@
-/*
- * Copyright (C) 2017 zhouyou(478319399@qq.com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.midea.network.http.cache.model;
 
 /**
  * <p>描述：网络请求策略</p>
- * 作者： zhouyou<br>
- * 日期： 2016/12/24 10:35<br>
- * 版本： v2.0<br>
  */
 public enum CacheMode {
     /**
      * 不使用缓存,该模式下,cacheKey,cacheMaxAge 参数均无效
      **/
-    NO_CACHE("NoStrategy"),
+    NO_CACHE,
     /**
      * 完全按照HTTP协议的默认缓存规则，走OKhttp的Cache缓存
      **/
-    DEFAULT("NoStrategy"),
+    DEFAULT,
     /**
      * 先请求网络，请求网络失败后再加载缓存
      */
-    FIRSTREMOTE("FirstRemoteStrategy"),
+    FIRST_REMOTE,
 
     /**
      * 先加载缓存，缓存没有再去请求网络
      */
-    FIRSTCACHE("FirstCacheStategy"),
+    FIRST_CACHE,
 
     /**
      * 仅加载网络，但数据依然会被缓存
      */
-    ONLYREMOTE("OnlyRemoteStrategy"),
+    ONLY_REMOTE,
 
     /**
      * 只读取缓存
      */
-    ONLYCACHE("OnlyCacheStrategy"),
+    ONLY_CACHE,
 
     /**
      * 先使用缓存，不管是否存在，仍然请求网络，会回调两次
      */
-    CACHEANDREMOTE("CacheAndRemoteStrategy"),
+    CACHE_AND_REMOTE,
     /**
-     * 先使用缓存，不管是否存在，仍然请求网络，会先把缓存回调给你，
-     * 等网络请求回来发现数据是一样的就不会再返回，否则再返回
-     * （这样做的目的是防止数据是一样的你也需要刷新界面）
+     * 先使用缓存，不管是否存在，仍然请求网络，会先把缓存回调给你<br>
+     * 等网络请求回来发现数据是一样的就不会再返回，否则再返回<br>
+     * （这样做的目的是防止数据是一样的你也需要刷新界面）<br>
+     * 该模式生效的先决条件是对象一样,需要重写toString()方法<br>
+     * 不一致是通过distinctUntilChanged操作符实现的.
      */
-    CACHEANDREMOTEDISTINCT("CacheAndRemoteDistinctStrategy");
+    CACHE_AND_REMOTE_DISTINCT;
 
-    private final String className;
-
-    CacheMode(String className) {
-        this.className = className;
-    }
-
-    public String getClassName() {
-        return className;
-    }
+    //默认永久缓存
+    public static final int DEFAULT_CACHE_NEVER_EXPIRE = -1;
 }

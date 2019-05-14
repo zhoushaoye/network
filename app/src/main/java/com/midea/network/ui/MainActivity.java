@@ -4,6 +4,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
 import com.midea.network.R;
+import com.midea.network.http.DolphinHttp;
 
 public class MainActivity extends AppCompatActivity {
 

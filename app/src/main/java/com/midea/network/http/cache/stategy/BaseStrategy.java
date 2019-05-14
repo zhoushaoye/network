@@ -1,25 +1,13 @@
-/*
- * Copyright (C) 2017 zhouyou(478319399@qq.com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
 package com.midea.network.http.cache.stategy;
 
 
+
+
+
 import com.midea.network.http.cache.RxCache;
 import com.midea.network.http.cache.model.CacheResult;
-import com.midea.network.http.utils.HttpLog;
+import com.midea.network.http.utils.HttpLogUtil;
 
 import java.lang.reflect.Type;
 import java.util.ConcurrentModificationException;
@@ -34,11 +22,9 @@ import io.reactivex.schedulers.Schedulers;
 
 /**
  * <p>描述：实现缓存策略的基类</p>
- * 作者： zhouyou<br>
- * 日期： 2016/12/24 10:35<br>
- * 版本： v2.0<br>
  */
 public abstract class BaseStrategy implements IStrategy {
+
     <T> Observable<CacheResult<T>> loadCache(final RxCache rxCache, Type type, final String key, final long time, final boolean needEmpty) {
         Observable<CacheResult<T>> observable = rxCache.<T>load(type, key, time).flatMap(new Function<T, ObservableSource<CacheResult<T>>>() {
             @Override
@@ -53,7 +39,8 @@ public abstract class BaseStrategy implements IStrategy {
             observable = observable
                     .onErrorResumeNext(new Function<Throwable, ObservableSource<? extends CacheResult<T>>>() {
                         @Override
-                        public ObservableSource<? extends CacheResult<T>> apply(@NonNull Throwable throwable) throws Exception {
+                        public ObservableSource<? extends CacheResult<T>> apply(@NonNull Throwable throwable) throws
+                                Exception {
                             return Observable.empty();
                         }
                     });
@@ -62,25 +49,25 @@ public abstract class BaseStrategy implements IStrategy {
     }
 
     //请求成功后：异步保存
-    <T> Observable<CacheResult<T>> loadRemote2(final RxCache rxCache, final String key, Observable<T> source, final boolean needEmpty) {
+    <T> Observable<CacheResult<T>> loadRemoteAndSaveAsync(final RxCache rxCache, final String key, Observable<T> source, final boolean needEmpty) {
         Observable<CacheResult<T>> observable = source
                 .map(new Function<T, CacheResult<T>>() {
                     @Override
                     public CacheResult<T> apply(@NonNull T t) throws Exception {
-                        HttpLog.i("loadRemote result=" + t);
+                        HttpLogUtil.i("loadRemote result=" + t);
                         rxCache.save(key, t).subscribeOn(Schedulers.io())
                                 .subscribe(new Consumer<Boolean>() {
                                     @Override
                                     public void accept(@NonNull Boolean status) throws Exception {
-                                        HttpLog.i("save status => " + status);
+                                        HttpLogUtil.i("save status => " + status);
                                     }
                                 }, new Consumer<Throwable>() {
                                     @Override
                                     public void accept(@NonNull Throwable throwable) throws Exception {
                                         if (throwable instanceof ConcurrentModificationException) {
-                                            HttpLog.i("Save failed, please use a synchronized cache strategy :", throwable);
+                                            HttpLogUtil.i("Save failed, please use a synchronized cache strategy :", throwable);
                                         } else {
-                                            HttpLog.i(throwable.getMessage());
+                                            HttpLogUtil.i(throwable.getMessage());
                                         }
                                     }
                                 });
@@ -91,7 +78,8 @@ public abstract class BaseStrategy implements IStrategy {
             observable = observable
                     .onErrorResumeNext(new Function<Throwable, ObservableSource<? extends CacheResult<T>>>() {
                         @Override
-                        public ObservableSource<? extends CacheResult<T>> apply(@NonNull Throwable throwable) throws Exception {
+                        public ObservableSource<? extends CacheResult<T>> apply(@NonNull Throwable throwable) throws
+                                Exception {
                             return Observable.empty();
                         }
                     });
@@ -100,7 +88,7 @@ public abstract class BaseStrategy implements IStrategy {
     }
 
     //请求成功后：同步保存
-    <T> Observable<CacheResult<T>> loadRemote(final RxCache rxCache, final String key, Observable<T> source, final boolean needEmpty) {
+    <T> Observable<CacheResult<T>> loadRemoteAndSaveSync(final RxCache rxCache, final String key, Observable<T> source, final boolean needEmpty) {
         Observable<CacheResult<T>> observable = source
                 .flatMap(new Function<T, ObservableSource<CacheResult<T>>>() {
                     @Override
@@ -108,13 +96,13 @@ public abstract class BaseStrategy implements IStrategy {
                         return  rxCache.save(key, t).map(new Function<Boolean, CacheResult<T>>() {
                             @Override
                             public CacheResult<T> apply(@NonNull Boolean aBoolean) throws Exception {
-                                HttpLog.i("save status => " + aBoolean);
+                                HttpLogUtil.i("save status => " + aBoolean);
                                 return new CacheResult<T>(false, t);
                             }
                         }).onErrorReturn(new Function<Throwable, CacheResult<T>>() {
                             @Override
                             public CacheResult<T> apply(@NonNull Throwable throwable) throws Exception {
-                                HttpLog.i("save status => " + throwable);
+                                HttpLogUtil.i("save status => " + throwable);
                                 return new CacheResult<T>(false, t);
                             }
                         });
@@ -124,7 +112,8 @@ public abstract class BaseStrategy implements IStrategy {
             observable = observable
                     .onErrorResumeNext(new Function<Throwable, ObservableSource<? extends CacheResult<T>>>() {
                         @Override
-                        public ObservableSource<? extends CacheResult<T>> apply(@NonNull Throwable throwable) throws Exception {
+                        public ObservableSource<? extends CacheResult<T>> apply(@NonNull Throwable throwable) throws
+                                Exception {
                             return Observable.empty();
                         }
                     });

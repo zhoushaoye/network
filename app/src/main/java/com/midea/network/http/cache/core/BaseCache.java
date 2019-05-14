@@ -1,38 +1,21 @@
-/*
- * Copyright (C) 2017 zhouyou(478319399@qq.com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
 package com.midea.network.http.cache.core;
 
 
 
-import com.midea.network.http.utils.Utils;
+
+import com.midea.network.http.utils.HttpUtil;
 
 import java.lang.reflect.Type;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 
 /**
  * <p>描述：缓存的基类</p>
  * 1.所有缓存处理都继承该基类<br>
  * 2.增加了锁机制，防止频繁读取缓存造成的异常。<br>
  * 3.子类直接考虑具体的实现细节就可以了。<br>
- * <p>
- * 作者： zhouyou<br>
- * 日期： 2016/01/07 12:35<br>
- * 版本： v2.0<br>
  */
 public abstract class BaseCache {
     private final ReadWriteLock mLock = new ReentrantReadWriteLock();
@@ -45,7 +28,7 @@ public abstract class BaseCache {
      */
     final <T> T load(Type type, String key, long existTime) {
         //1.先检查key
-        Utils.checkNotNull(key, "key == null");
+        HttpUtil.checkNotNull(key, "key == null");
 
         //2.判断key是否存在,key不存在去读缓存没意义
         if (!containsKey(key)) {
@@ -77,7 +60,7 @@ public abstract class BaseCache {
      */
     final <T> boolean save(String key, T value) {
         //1.先检查key
-        Utils.checkNotNull(key, "key == null");
+        HttpUtil.checkNotNull(key, "key == null");
 
         //2.如果要保存的值为空,则删除
         if (value == null) {
@@ -164,4 +147,9 @@ public abstract class BaseCache {
      * 清空缓存
      */
     protected abstract boolean doClear();
+
+    /**
+     * 关闭DishCache
+     */
+    protected abstract boolean close();
 }

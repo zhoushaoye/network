@@ -1,56 +1,59 @@
-/*
- * Copyright (C) 2017 zhouyou(478319399@qq.com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.midea.network.http.request;
 
+import com.midea.network.http.body.UploadRequestBody;
+import com.midea.network.http.callback.IHttpCallBack;
+import com.midea.network.http.callback.IProgressCallBack;
+import com.midea.network.http.callback.typeproxy.CallBackProxy;
+import com.midea.network.http.callback.typeproxy.CallTypeProxy;
+import com.midea.network.http.config.RequestConfig;
+import com.midea.network.http.model.ApiResult;
+import com.midea.network.http.model.HttpRequestParams;
+import com.midea.network.http.model.IApiResult;
+import com.midea.network.http.subsciber.CallBackSubsciber;
+import com.midea.network.http.utils.HttpRequestBodyUtil;
+import com.midea.network.http.utils.HttpRxUtil;
+import com.midea.network.http.utils.HttpUtil;
 
-import com.midea.network.http.body.ProgressResponseCallBack;
-import com.midea.network.http.body.RequestBodyUtils;
-import com.midea.network.http.body.UploadProgressRequestBody;
-import com.midea.network.http.model.HttpParams;
-import com.midea.network.http.utils.Utils;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import io.reactivex.Observable;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.disposables.Disposable;
+import okhttp3.Interceptor;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
+import okhttp3.Request;
 import okhttp3.RequestBody;
+import okhttp3.Response;
 import okhttp3.ResponseBody;
-import retrofit2.http.Body;
 
 /**
- * <p>描述：body请求的基类</p>
- * 作者： zhouyou<br>
- * 日期： 2017/5/22 17:13 <br>
- * 版本： v1.0<br>
+ * body请求
+ *
+ * @author zhoudingjun
+ * @version 1.0
+ * @since 2019/5/13
  */
-@SuppressWarnings(value={"unchecked", "deprecation"})
-public abstract class BaseBodyRequest<R extends BaseBodyRequest> extends BaseRequest<R> {
-    protected String string;                                   //上传的文本内容
-    protected MediaType mediaType;                                   //上传的文本内容
-    protected String json;                                     //上传的Json
-    protected byte[] bs;                                       //上传的字节数据
-    protected Object object;                                   //上传的对象
-    protected RequestBody requestBody;                         //自定义的请求体
+public abstract class BaseBodyRequest<R extends BaseBodyRequest> extends RequestConfig<R> {
+
+    //上传的文本内容
+    String mStringContent;
+
+    //上传的文本内容
+    MediaType mMediaTypeContent;
+
+    String mJsonStr;
+
+    //上传的字节数据
+    byte[] mBytesContent;
 
     public enum UploadType {
         /**
@@ -63,186 +66,202 @@ public abstract class BaseBodyRequest<R extends BaseBodyRequest> extends BaseReq
         BODY
     }
 
-    private UploadType currentUploadType = UploadType.PART;
+    UploadType mCurrentUploadType = UploadType.BODY;
 
     public BaseBodyRequest(String url) {
         super(url);
     }
 
-    public R requestBody(RequestBody requestBody) {
-        this.requestBody = requestBody;
-        return (R) this;
-    }
-
-    /**
-     * 注意使用该方法上传字符串会清空实体中其他所有的参数，头信息不清除
-     */
     public R upString(String string) {
-        this.string = string;
-        this.mediaType = okhttp3.MediaType.parse("text/plain");
+        this.mStringContent = string;
+        this.mMediaTypeContent = MediaType.parse("text/plain");
         return (R) this;
     }
 
     public R upString(String string, String mediaType) {
-        this.string = string;
-        Utils.checkNotNull(mediaType, "mediaType==null");
-        this.mediaType = okhttp3.MediaType.parse(mediaType);
+        this.mStringContent = string;
+        HttpUtil.checkNotNull(mediaType, "mediaType==null");
+        this.mMediaTypeContent = MediaType.parse(mediaType);
         return (R) this;
     }
 
-    public R upObject(@Body Object object) {
-        this.object = object;
-        return (R) this;
-    }
-
-    /**
-     * 注意使用该方法上传字符串会清空实体中其他所有的参数，头信息不清除
-     */
-    public R upJson(String json) {
-        this.json = json;
-        return (R) this;
-    }
-
-    /**
-     * 注意使用该方法上传字符串会清空实体中其他所有的参数，头信息不清除
-     */
     public R upBytes(byte[] bs) {
-        this.bs = bs;
+        this.mBytesContent = bs;
         return (R) this;
     }
 
-    public R params(String key, File file, ProgressResponseCallBack responseCallBack) {
-        params.put(key, file, responseCallBack);
+    public R param(String key, File file) {
+        getHttpRequestParams().putFileParam(key, file);
         return (R) this;
     }
 
-    public R params(String key, InputStream stream, String fileName, ProgressResponseCallBack responseCallBack) {
-        params.put(key, stream, fileName, responseCallBack);
+    public R param(String key, InputStream stream, String fileName) {
+        getHttpRequestParams().putFileParam(key, stream, fileName);
         return (R) this;
     }
 
-    public R params(String key, byte[] bytes, String fileName, ProgressResponseCallBack responseCallBack) {
-        params.put(key, bytes, fileName, responseCallBack);
+    public R param(String key, byte[] bytes, String fileName) {
+        getHttpRequestParams().putFileParam(key, bytes, fileName);
         return (R) this;
     }
 
-    public R addFileParams(String key, List<File> files, ProgressResponseCallBack responseCallBack) {
-        params.putFileParams(key, files, responseCallBack);
+    public R addFileParams(String key, List<File> files) {
+        getHttpRequestParams().putFileParams(key, files);
         return (R) this;
     }
 
-    public R addFileWrapperParams(String key, List<HttpParams.FileWrapper> fileWrappers) {
-        params.putFileWrapperParams(key, fileWrappers);
+    public R addFileWrapperParams(String key, List<HttpRequestParams.FileWrapper> fileWrappers) {
+        getHttpRequestParams().putFileWrapperParams(key, fileWrappers);
         return (R) this;
     }
 
-    public R params(String key, File file, String fileName, ProgressResponseCallBack responseCallBack) {
-        params.put(key, file, fileName, responseCallBack);
+    public R param(String key, File file, String fileName) {
+        getHttpRequestParams().putFileParam(key, file, fileName);
         return (R) this;
     }
 
-    public <T> R params(String key, T file, String fileName, MediaType contentType, ProgressResponseCallBack responseCallBack) {
-        params.put(key, file, fileName, contentType, responseCallBack);
+    public <T> R param(String key, T file, String fileName, MediaType contentType) {
+        getHttpRequestParams().putFileParam(key, file, fileName, contentType);
         return (R) this;
     }
 
     /**
-     * 上传文件的方式，默认part方式上传
+     * 上传文件的方式，默认BODY方式上传
      */
-    public <T> R uploadType(UploadType uploadtype) {
-        currentUploadType = uploadtype;
+    public R uploadType(UploadType uploadtype) {
+        mCurrentUploadType = uploadtype;
         return (R) this;
     }
 
-    @Override
-    protected Observable<ResponseBody> generateRequest() {
-        if (this.requestBody != null) { //自定义的请求体
-            return apiManager.postBody(url, this.requestBody);
-        } else if (this.json != null) {//上传的Json
-            RequestBody body = RequestBody.create(okhttp3.MediaType.parse("application/json; charset=utf-8"), this.json);
-            return apiManager.postJson(url, body);
-        } else if (this.object != null) {//自定义的请求object
-            return apiManager.postBody(url, object);
-        } else if (this.string != null) {//上传的文本内容
-            RequestBody body = RequestBody.create(mediaType, this.string);
-            return apiManager.postBody(url, body);
-        } else if (this.bs != null) {//上传的字节数据
-            RequestBody body = RequestBody.create(okhttp3.MediaType.parse("application/octet-stream"), this.bs);
-            return apiManager.postBody(url, body);
-        }
-        if (params.fileParamsMap.isEmpty()) {
-            return apiManager.post(url, params.urlParamsMap);
-        } else {
-            if (currentUploadType == UploadType.PART) {//part方式上传
-                return uploadFilesWithParts();
-            } else {//body方式上传
-                return uploadFilesWithBodys();
-            }
-        }
-    }
-
-    protected Observable<ResponseBody> uploadFilesWithParts() {
+    List<MultipartBody.Part> uploadFilesWithParts() {
         List<MultipartBody.Part> parts = new ArrayList<>();
         //拼接参数键值对
-        for (Map.Entry<String, String> mapEntry : params.urlParamsMap.entrySet()) {
-            parts.add(MultipartBody.Part.createFormData(mapEntry.getKey(),mapEntry.getValue()));
+        for (Map.Entry<String, String> mapEntry : getHttpRequestParams().getRequestParams().entrySet()) {
+            parts.add(MultipartBody.Part.createFormData(mapEntry.getKey(), mapEntry.getValue()));
         }
         //拼接文件
-        for (Map.Entry<String, List<HttpParams.FileWrapper>> entry : params.fileParamsMap.entrySet()) {
-            List<HttpParams.FileWrapper> fileValues = entry.getValue();
-            for (HttpParams.FileWrapper fileWrapper : fileValues) {
+        for (Map.Entry<String, List<HttpRequestParams.FileWrapper>> entry : getHttpRequestParams().getFileParams()
+                .entrySet()) {
+            List<HttpRequestParams.FileWrapper> fileValues = entry.getValue();
+            for (HttpRequestParams.FileWrapper fileWrapper : fileValues) {
                 MultipartBody.Part part = addFile(entry.getKey(), fileWrapper);
                 parts.add(part);
             }
         }
-        return apiManager.uploadFiles(url, parts);
+        return parts;
     }
 
-    protected Observable<ResponseBody> uploadFilesWithBodys() {
+    Map<String, RequestBody> uploadFilesWithBodys() {
         Map<String, RequestBody> mBodyMap = new HashMap<>();
         //拼接参数键值对
-        for (Map.Entry<String, String> mapEntry : params.urlParamsMap.entrySet()) {
+        for (Map.Entry<String, String> mapEntry : getHttpRequestParams().getRequestParams().entrySet()) {
             RequestBody body = RequestBody.create(MediaType.parse("text/plain"), mapEntry.getValue());
             mBodyMap.put(mapEntry.getKey(), body);
         }
         //拼接文件
-        for (Map.Entry<String, List<HttpParams.FileWrapper>> entry : params.fileParamsMap.entrySet()) {
-            List<HttpParams.FileWrapper> fileValues = entry.getValue();
-            for (HttpParams.FileWrapper fileWrapper : fileValues) {
+        for (Map.Entry<String, List<HttpRequestParams.FileWrapper>> entry : getHttpRequestParams().getFileParams()
+                .entrySet()) {
+            List<HttpRequestParams.FileWrapper> fileValues = entry.getValue();
+            for (HttpRequestParams.FileWrapper fileWrapper : fileValues) {
                 RequestBody requestBody = getRequestBody(fileWrapper);
-                UploadProgressRequestBody uploadProgressRequestBody = new UploadProgressRequestBody(requestBody, fileWrapper.responseCallBack);
-                mBodyMap.put(entry.getKey(), uploadProgressRequestBody);
+                mBodyMap.put(entry.getKey(), requestBody);
             }
         }
-        return apiManager.uploadFiles(url, mBodyMap);
+        return mBodyMap;
     }
 
-    //文件方式
-    private MultipartBody.Part addFile(String key, HttpParams.FileWrapper fileWrapper) {
-        //MediaType.parse("application/octet-stream", file)
-        RequestBody requestBody = getRequestBody(fileWrapper);
-        Utils.checkNotNull(requestBody, "requestBody==null fileWrapper.file must is File/InputStream/byte[]");
-        //包装RequestBody，在其内部实现上传进度监听
-        if (fileWrapper.responseCallBack != null) {
-            UploadProgressRequestBody uploadProgressRequestBody = new UploadProgressRequestBody(requestBody, fileWrapper.responseCallBack);
-            MultipartBody.Part part = MultipartBody.Part.createFormData(key, fileWrapper.fileName, uploadProgressRequestBody);
-            return part;
-        } else {
-            MultipartBody.Part part = MultipartBody.Part.createFormData(key, fileWrapper.fileName, requestBody);
-            return part;
-        }
-    }
-
-    private RequestBody getRequestBody(HttpParams.FileWrapper fileWrapper) {
+    RequestBody uploadFilesWithBody() {
         RequestBody requestBody = null;
-        if (fileWrapper.file instanceof File) {
-            requestBody = RequestBody.create(fileWrapper.contentType, (File) fileWrapper.file);
-        } else if (fileWrapper.file instanceof InputStream) {
-            //requestBody = RequestBodyUtils.create(RequestBodyUtils.MEDIA_TYPE_MARKDOWN, (InputStream) fileWrapper.file);
-            requestBody = RequestBodyUtils.create(fileWrapper.contentType, (InputStream) fileWrapper.file);
-        } else if (fileWrapper.file instanceof byte[]) {
-            requestBody = RequestBody.create(fileWrapper.contentType, (byte[]) fileWrapper.file);
+        for (Map.Entry<String, List<HttpRequestParams.FileWrapper>> entry : getHttpRequestParams().getFileParams()
+                .entrySet()) {
+            List<HttpRequestParams.FileWrapper> fileValues = entry.getValue();
+            for (HttpRequestParams.FileWrapper fileWrapper : fileValues) {
+                requestBody = getRequestBody(fileWrapper);
+            }
         }
         return requestBody;
     }
+
+    //文件方式
+    private MultipartBody.Part addFile(String key, HttpRequestParams.FileWrapper fileWrapper) {
+        RequestBody requestBody = getRequestBody(fileWrapper);
+        HttpUtil.checkNotNull(requestBody, "requestBody == null,file must be File/InputStream/byte[]");
+        MultipartBody.Part part = MultipartBody.Part.createFormData(key, fileWrapper.getFileName(), requestBody);
+        return part;
+    }
+
+    private RequestBody getRequestBody(HttpRequestParams.FileWrapper fileWrapper) {
+        RequestBody requestBody = null;
+        if (fileWrapper.getFile() instanceof File) {
+            requestBody = RequestBody.create(fileWrapper.getContentType(), (File) fileWrapper.getFile());
+        } else if (fileWrapper.getFile() instanceof InputStream) {
+            requestBody = HttpRequestBodyUtil.create(fileWrapper.getContentType(), (InputStream) fileWrapper.getFile());
+        } else if (fileWrapper.getFile() instanceof byte[]) {
+            requestBody = RequestBody.create(fileWrapper.getContentType(), (byte[]) fileWrapper.getFile());
+        }
+        return requestBody;
+    }
+
+    public <T> Observable<T> execute(@NonNull Type type) {
+        return execute(new CallTypeProxy<ApiResult<T>, T>(type) {
+        }, false);
+    }
+
+    protected <T> Observable<T> execute(CallTypeProxy<? extends IApiResult<T>, T> proxy, boolean syn) {
+        return HttpRxUtil.createObservable(createRequest(), proxy, this, syn);
+    }
+
+
+    public <T> Disposable execute(@NonNull IHttpCallBack<T> callBack) {
+        return execute(new CallBackProxy<ApiResult<T>, T>(callBack) {
+        }, false);
+    }
+
+    public <T> Disposable execute() {
+        return execute(new CallBackProxy<ApiResult<T>, T>(mHttpCallBack) {
+        }, false);
+    }
+
+    protected <T> Disposable execute(CallBackProxy<? extends IApiResult<T>, T> proxy, boolean syn) {
+        return HttpRxUtil.createObservable(createRequest(), proxy, this, syn)
+                .subscribeWith(new CallBackSubsciber<T>(getContext(),proxy.getHttpCallBack()));
+    }
+
+    public <T> Observable<T> execute(IProgressCallBack progressCallBack, @NonNull Type type) {
+        setUploadProgressListener(progressCallBack);
+        return execute(type);
+    }
+
+    public <T> Disposable execute(IProgressCallBack progressCallBack, @NonNull IHttpCallBack<T> callBack) {
+        setUploadProgressListener(progressCallBack);
+        return execute(callBack);
+    }
+
+    public Disposable execute(IProgressCallBack progressCallBack) {
+        setUploadProgressListener(progressCallBack);
+        return execute();
+    }
+
+    /**
+     * 上传进度监听
+     */
+    private void setUploadProgressListener(final IProgressCallBack progressCallBack) {
+        addInterceptor(new Interceptor() {
+            @Override
+            public Response intercept(Chain chain) throws IOException {
+                Request request = chain.request();
+                if (null == request.body()) {
+                    return chain.proceed(request);
+                }
+                Request build = request.newBuilder()
+                        .method(request.method(),
+                                new UploadRequestBody(request.body(),request.url().toString(),progressCallBack)
+                        )
+                        .build();
+                return chain.proceed(build);
+            }
+        });
+    }
+
+    abstract Observable<ResponseBody> createRequest();
 }

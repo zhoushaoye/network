@@ -1,24 +1,9 @@
-/*
- * Copyright (C) 2017 zhouyou(478319399@qq.com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.midea.network.http.cache;
 
 import android.content.Context;
 import android.os.Environment;
 import android.os.StatFs;
+
 
 
 import com.midea.network.http.cache.converter.IDiskConverter;
@@ -27,9 +12,17 @@ import com.midea.network.http.cache.core.CacheCore;
 import com.midea.network.http.cache.core.LruDiskCache;
 import com.midea.network.http.cache.model.CacheMode;
 import com.midea.network.http.cache.model.CacheResult;
+import com.midea.network.http.cache.stategy.CacheAndRemoteDistinctStrategy;
+import com.midea.network.http.cache.stategy.CacheAndRemoteStrategy;
+import com.midea.network.http.cache.stategy.FirstCacheStategy;
+import com.midea.network.http.cache.stategy.FirstRemoteStrategy;
 import com.midea.network.http.cache.stategy.IStrategy;
-import com.midea.network.http.utils.HttpLog;
-import com.midea.network.http.utils.Utils;
+import com.midea.network.http.cache.stategy.NoStrategy;
+import com.midea.network.http.cache.stategy.OnlyCacheStrategy;
+import com.midea.network.http.cache.stategy.OnlyRemoteStrategy;
+import com.midea.network.http.utils.HttpLogUtil;
+import com.midea.network.http.utils.HttpUtil;
+
 
 import java.io.File;
 import java.lang.reflect.ParameterizedType;
@@ -65,38 +58,50 @@ import io.reactivex.exceptions.Exceptions;
  * 使用说明：<br>
  * RxCache rxCache = new RxCache.Builder(this)<br>
  * .appVersion(1)//不设置，默认为1</br>
- * .diskDir(new File(getCacheDir().getPath() + File.separator + "data-cache"))//不设置，默认使用缓存路径<br>
- * .diskConverter(new SerializableDiskConverter())//目前只支持Serializable缓存<br>
- * .diskMax(20*1024*1024)//不设置， 默为认50MB<br>
+ * .diskDir(new File(getCacheDir().getPath() + File.separator + "data-cache"))//不设置,默认使用缓存路径<br>
+ * .diskConverter(new SerializableDiskConverter())<br>
+ * .diskMax(20*1024*1024)//不设置,默为认50MB<br>
  * .build();</br>
  * </P>
- * 作者： zhouyou<br>
- * 日期： 2016/12/24 10:35<br>
- * 版本： v2.0<br>
  */
 public final class RxCache {
-    private final Context context;
-    private final CacheCore cacheCore;                                  //缓存的核心管理类
-    private final String cacheKey;                                      //缓存的key
-    private final long cacheTime;                                       //缓存的时间 单位:秒
-    private final IDiskConverter diskConverter;                         //缓存的转换器
-    private final File diskDir;                                         //缓存的磁盘目录，默认是缓存目录
-    private final int appVersion;                                       //缓存的版本
-    private final long diskMaxSize;                                     //缓存的磁盘大小
+
+    private final Context mContext;
+
+    //缓存的核心管理类
+    private final CacheCore mCacheCore;
+
+    //缓存的key
+    private final String mCacheKey;
+
+    //缓存的时间 单位:秒
+    private final long mCacheTime;
+
+    //缓存的转换器
+    private final IDiskConverter mDiskConverter;
+
+    //缓存的磁盘目录，默认是缓存目录
+    private final File mDiskDir;
+
+    //缓存的版本
+    private final int mAppVersion;
+
+    //缓存的磁盘大小
+    private final long mDiskMaxSize;
 
     public RxCache() {
         this(new Builder());
     }
 
     private RxCache(Builder builder) {
-        this.context = builder.context;
-        this.cacheKey = builder.cachekey;
-        this.cacheTime = builder.cacheTime;
-        this.diskDir = builder.diskDir;
-        this.appVersion = builder.appVersion;
-        this.diskMaxSize = builder.diskMaxSize;
-        this.diskConverter = builder.diskConverter;
-        cacheCore = new CacheCore(new LruDiskCache(diskConverter, diskDir, appVersion, diskMaxSize));
+        this.mContext = builder.context;
+        this.mCacheKey = builder.cachekey;
+        this.mCacheTime = builder.cacheTime;
+        this.mDiskDir = builder.diskDir;
+        this.mAppVersion = builder.appVersion;
+        this.mDiskMaxSize = builder.diskMaxSize;
+        this.mDiskConverter = builder.diskConverter;
+        mCacheCore = new CacheCore(new LruDiskCache(mDiskConverter, mDiskDir, mAppVersion, mDiskMaxSize));
     }
 
     public Builder newBuilder() {
@@ -109,26 +114,27 @@ public final class RxCache {
      * @param cacheMode 缓存类型
      * @param type      缓存clazz
      */
-    @SuppressWarnings(value={"unchecked", "deprecation"})
     public <T> ObservableTransformer<T, CacheResult<T>> transformer(CacheMode cacheMode, final Type type) {
         final IStrategy strategy = loadStrategy(cacheMode);//获取缓存策略
         return new ObservableTransformer<T, CacheResult<T>>() {
             @Override
             public ObservableSource<CacheResult<T>> apply(@NonNull Observable<T> upstream) {
-                HttpLog.i("cackeKey=" + RxCache.this.cacheKey);
+                HttpLogUtil.i("cackeKey=" + RxCache.this.mCacheKey);
                 Type tempType = type;
                 if (type instanceof ParameterizedType) {//自定义ApiResult
                     Class<T> cls = (Class) ((ParameterizedType) type).getRawType();
                     if (CacheResult.class.isAssignableFrom(cls)) {
-                        tempType = Utils.getParameterizedType(type, 0);
+                        tempType = HttpUtil.getParameterizedType(type, 0);
                     }
                 }
-                return strategy.execute(RxCache.this, RxCache.this.cacheKey, RxCache.this.cacheTime, upstream, tempType);
+                return strategy
+                        .execute(RxCache.this, RxCache.this.mCacheKey, RxCache.this.mCacheTime, upstream, tempType);
             }
         };
     }
 
     private static abstract class SimpleSubscribe<T> implements ObservableOnSubscribe<T> {
+
         @Override
         public void subscribe(@NonNull ObservableEmitter<T> subscriber) throws Exception {
             try {
@@ -137,7 +143,7 @@ public final class RxCache {
                     subscriber.onNext(data);
                 }
             } catch (Throwable e) {
-                HttpLog.e(e.getMessage());
+                HttpLogUtil.e(e.getMessage());
                 if (!subscriber.isDisposed()) {
                     subscriber.onError(e);
                 }
@@ -156,8 +162,9 @@ public final class RxCache {
 
     /**
      * 获取缓存
+     *
      * @param type 保存的类型
-     * @param key 缓存key
+     * @param key  缓存key
      */
     public <T> Observable<T> load(final Type type, final String key) {
         return load(type, key, -1);
@@ -174,7 +181,7 @@ public final class RxCache {
         return Observable.create(new SimpleSubscribe<T>() {
             @Override
             T execute() {
-                return cacheCore.load(type, key, time);
+                return mCacheCore.load(type, key, time);
             }
         });
     }
@@ -189,7 +196,7 @@ public final class RxCache {
         return Observable.create(new SimpleSubscribe<Boolean>() {
             @Override
             Boolean execute() throws Throwable {
-                cacheCore.save(key, value);
+                mCacheCore.save(key, value);
                 return true;
             }
         });
@@ -202,7 +209,7 @@ public final class RxCache {
         return Observable.create(new SimpleSubscribe<Boolean>() {
             @Override
             Boolean execute() throws Throwable {
-                return cacheCore.containsKey(key);
+                return mCacheCore.containsKey(key);
             }
         });
     }
@@ -214,7 +221,7 @@ public final class RxCache {
         return Observable.create(new SimpleSubscribe<Boolean>() {
             @Override
             Boolean execute() throws Throwable {
-                return cacheCore.remove(key);
+                return mCacheCore.remove(key);
             }
         });
     }
@@ -226,65 +233,108 @@ public final class RxCache {
         return Observable.create(new SimpleSubscribe<Boolean>() {
             @Override
             Boolean execute() throws Throwable {
-                return cacheCore.clear();
+                return mCacheCore.clear();
+            }
+        });
+    }
+    /**
+     * 关闭DiskCache
+     */
+    public Observable<Boolean> close() {
+        return Observable.create(new SimpleSubscribe<Boolean>() {
+            @Override
+            Boolean execute() throws Throwable {
+                return mCacheCore.close();
             }
         });
     }
 
     /**
-     * 利用反射，加载缓存策略模型
+     * 加载缓存策略模型
      */
     private IStrategy loadStrategy(CacheMode cacheMode) {
-        try {
-            String pkName = IStrategy.class.getPackage().getName();
-            return (IStrategy) Class.forName(pkName + "." + cacheMode.getClassName()).newInstance();
-        } catch (Exception e) {
-            throw new RuntimeException("loadStrategy(" + cacheMode + ") err!!" + e.getMessage());
+        IStrategy strategy = null;
+        switch (cacheMode) {
+            case NO_CACHE:
+                strategy = new NoStrategy();
+                break;
+            case ONLY_CACHE:
+                strategy = new OnlyCacheStrategy();
+                break;
+            case FIRST_CACHE:
+                strategy = new FirstCacheStategy();
+                break;
+            case ONLY_REMOTE:
+                strategy = new OnlyRemoteStrategy();
+                break;
+            case FIRST_REMOTE:
+                strategy = new FirstRemoteStrategy();
+                break;
+            case CACHE_AND_REMOTE:
+                strategy = new CacheAndRemoteStrategy();
+                break;
+            case CACHE_AND_REMOTE_DISTINCT:
+                strategy = new CacheAndRemoteDistinctStrategy();
+                break;
+            default:
+                break;
         }
+
+        return strategy;
     }
 
     public long getCacheTime() {
-        return cacheTime;
+        return mCacheTime;
     }
 
     public String getCacheKey() {
-        return cacheKey;
+        return mCacheKey;
     }
 
     public Context getContext() {
-        return context;
+        return mContext;
     }
 
     public CacheCore getCacheCore() {
-        return cacheCore;
+        return mCacheCore;
     }
 
     public IDiskConverter getDiskConverter() {
-        return diskConverter;
+        return mDiskConverter;
     }
 
     public File getDiskDir() {
-        return diskDir;
+        return mDiskDir;
     }
 
     public int getAppVersion() {
-        return appVersion;
+        return mAppVersion;
     }
 
     public long getDiskMaxSize() {
-        return diskMaxSize;
+        return mDiskMaxSize;
     }
 
     public static final class Builder {
+
         private static final int MIN_DISK_CACHE_SIZE = 5 * 1024 * 1024; // 5MB
+
         private static final int MAX_DISK_CACHE_SIZE = 50 * 1024 * 1024; // 50MB
+
         public static final long CACHE_NEVER_EXPIRE = -1;//永久不过期
+
         private int appVersion;
+
         private long diskMaxSize;
+
         private File diskDir;
+
         private IDiskConverter diskConverter;
+
         private Context context;
+
         private String cachekey;
+
         private long cacheTime;
 
         public Builder() {
@@ -294,14 +344,13 @@ public final class RxCache {
         }
 
         public Builder(RxCache rxCache) {
-            this.context = rxCache.context;
-            this.appVersion = rxCache.appVersion;
-            this.diskMaxSize = rxCache.diskMaxSize;
-            this.diskDir = rxCache.diskDir;
-            this.diskConverter = rxCache.diskConverter;
-            this.context = rxCache.context;
-            this.cachekey = rxCache.cacheKey;
-            this.cacheTime = rxCache.cacheTime;
+            this.context = rxCache.mContext;
+            this.appVersion = rxCache.mAppVersion;
+            this.diskMaxSize = rxCache.mDiskMaxSize;
+            this.diskDir = rxCache.mDiskDir;
+            this.diskConverter = rxCache.mDiskConverter;
+            this.cachekey = rxCache.mCacheKey;
+            this.cacheTime = rxCache.mCacheTime;
         }
 
         public Builder init(Context context) {
@@ -319,9 +368,6 @@ public final class RxCache {
 
         /**
          * 默认为缓存路径
-         *
-         * @param directory
-         * @return
          */
         public Builder diskDir(File directory) {
             this.diskDir = directory;
@@ -356,7 +402,7 @@ public final class RxCache {
             if (this.diskDir == null && this.context != null) {
                 this.diskDir = getDiskCacheDir(this.context, "data-cache");
             }
-            Utils.checkNotNull(this.diskDir, "diskDir==null");
+            HttpUtil.checkNotNull(this.diskDir, "diskDir==null");
             if (!this.diskDir.exists()) {
                 this.diskDir.mkdirs();
             }
