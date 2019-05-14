@@ -8,8 +8,6 @@ import android.view.ViewGroup;
 
 import androidx.annotation.LayoutRes;
 
-import com.midea.dolphin.base.IStatusView;
-
 
 /**
  * 加载状态的内容View提供器

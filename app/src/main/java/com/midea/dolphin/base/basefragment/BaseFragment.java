@@ -1,18 +1,21 @@
-package com.midea.dolphin.base.activity;
+package com.midea.dolphin.base.basefragment;
 
+import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.midea.dolphin.base.IStatusView;
-import com.midea.dolphin.base.StatusView;
-import com.midea.dolphin.base.StatusViewProvider;
+import com.midea.dolphin.R;
+import com.midea.dolphin.base.view.IStatusView;
+import com.midea.dolphin.base.view.StatusView;
+import com.midea.dolphin.base.widget.StatusViewProvider;
 import com.midea.dolphin.base.mvp.IView;
 import com.midea.dolphin.base.rx.RxLifecycleCompositor;
-import com.midea.dolphin.base.util.StatusBarUtil;
 import com.midea.dolphin.base.view.ContentViewBuilder;
 import com.midea.dolphin.base.widget.StatusToolbar;
 import com.trello.lifecycle2.android.lifecycle.AndroidLifecycle;
@@ -22,20 +25,20 @@ import com.trello.rxlifecycle3.LifecycleTransformer;
 import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.TintTypedArray;
 import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Lifecycle;
 import io.reactivex.disposables.Disposable;
 
 /**
- * 基础Activity，所有的Activity都集成与此Activity
+ * 基础Fragment，所有的Fragment都集成与此Fragment
  *
  * @author zhoudingjun
  * @version 1.0
  * @since 2019/5/14
  */
-public abstract class BaseActivity extends AppCompatActivity implements IView, StatusViewProvider {
+public abstract class BaseFragment extends Fragment implements IView, StatusViewProvider {
 
     /**
      * 绑定Activity生命周期提供器
@@ -59,97 +62,79 @@ public abstract class BaseActivity extends AppCompatActivity implements IView, S
 
     private ContentViewBuilder mBuilder;
 
+    @Nullable
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        ActivityManager.getInstance().pushActivity(this);
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         int layoutRes = getLayout();
         if (layoutRes != 0) {
-            setContentView(layoutRes);
+            View contentView = inflater.inflate(layoutRes, null);
+            return covertContentView(contentView);
         }
-    }
-
-    @Override
-    public void setContentView(int layoutResID) {
-        View contentView = LayoutInflater.from(this).inflate(layoutResID, null);
-        setContentView(contentView);
-    }
-
-    @Override
-    public void setContentView(View view) {
-        View contentView = covertContentView(view);
-        super.setContentView(contentView);
-        initActionBar();
-        onViewCreated(contentView);
-    }
-
-    @Override
-    public void setContentView(View view, ViewGroup.LayoutParams params) {
-        View contentView = covertContentView(view);
-        super.setContentView(contentView, params);
-        initActionBar();
-        onViewCreated(contentView);
+        return super.onCreateView(inflater, container, savedInstanceState);
     }
 
     /**
-     * 绑定statusBar+Toolbar+内容页
+     * 转换内容View，对内容View增加或删除等操作
      *
-     * @return 根布局View
+     * @param contentView 内容View
+     * @return Fragment的最终展示View
      */
-    private View covertContentView(View contentView) {
+    protected View covertContentView(View contentView) {
         this.contentView = contentView;
-        mBuilder = new ContentViewBuilder(this);
+        Activity activity = getActivity();
+        mBuilder = new ContentViewBuilder(activity);
+        int layout = getStatusToolbarLayout();
+        mBuilder.hasHeaderBar(layout != 0);
         onChangeContentView(mBuilder);
         if (mBuilder.isHasHeaderBar()) {
             mStatusToolbar = mBuilder.getStatusToolbar();
             if (mStatusToolbar == null) {
-                int layout = getStatusToolbarLayout();
                 if (layout != 0) {
-                    mStatusToolbar = (StatusToolbar) LayoutInflater.from(this).inflate(layout, null);
+                    mStatusToolbar = (StatusToolbar) LayoutInflater.from(activity).inflate(layout, null);
                     mBuilder.statusToolbar(mStatusToolbar);
                 } else {
-                    mStatusToolbar = new StatusToolbar(this);
+                    mStatusToolbar = new StatusToolbar(activity);
                 }
             }
-        } else {
-            // 如果没有status+toolbar，则全部沉浸式展示Activity
-            StatusBarUtil.fillStatusBar(this);
         }
         if (mBuilder.isHasLoadStatus()) {
             mStatusView = mBuilder.getStatusView();
             if (mStatusView == null) {
-                mStatusView = new StatusView(this);
+                mStatusView = new StatusView(activity);
             }
             mStatusView.setStatusViewProvider(this);
         }
         mBuilder.statusView(mStatusView);
+        initToolbar();
         return mBuilder.build(contentView);
     }
-
 
     /**
      * 初始化ActionBar
      */
-    private void initActionBar() {
+    @SuppressLint("RestrictedApi")
+    private void initToolbar() {
         Toolbar toolbar = getToolbar();
         if (toolbar != null) {
-            setSupportActionBar(getToolbar());
-            ActionBar actionBar = this.getSupportActionBar();
-            if (actionBar != null) {
-                actionBar.setDisplayShowTitleEnabled(true);
-                actionBar.setDisplayShowCustomEnabled(false);
-                actionBar.setDisplayHomeAsUpEnabled(true);
+            if (toolbar.getNavigationIcon() == null) {
+                TintTypedArray a = TintTypedArray.obtainStyledAttributes(toolbar.getContext(), null, R.styleable.ActionBar, R.attr.actionBarStyle, 0);
+                Drawable defaultNavigationIcon = a.getDrawable(R.styleable.ActionBar_homeAsUpIndicator);
+                if (defaultNavigationIcon != null) {
+                    toolbar.setNavigationIcon(defaultNavigationIcon);
+                }
+                a.recycle();
             }
-        }
-    }
-
-    /**
-     * 隐藏返回按钮
-     */
-    public void hideNavigationBack() {
-        ActionBar actionBar = this.getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setDisplayHomeAsUpEnabled(false);
+            toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    BaseFragment.this.onNavigationBackPressed();
+                }
+            });
+            Activity activity = getActivity();
+            if (activity != null && !TextUtils.isEmpty(activity.getTitle())
+                    && TextUtils.isEmpty(toolbar.getTitle())) {
+                toolbar.setTitle(activity.getTitle());
+            }
         }
     }
 
@@ -174,15 +159,17 @@ public abstract class BaseActivity extends AppCompatActivity implements IView, S
         return mStatusToolbar;
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                onBackPressed();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+    /**
+     * 提供状态View
+     *
+     * @return 状态View
+     */
+    private IStatusView provideStatusView() {
+        IStatusView statusView = createStatusView();
+        if (statusView != null) {
+            statusView.setStatusViewProvider(this);
         }
+        return statusView;
     }
 
     /**
@@ -245,7 +232,7 @@ public abstract class BaseActivity extends AppCompatActivity implements IView, S
         return null;
     }
 
-    protected IStatusView getStatusView() {
+    public IStatusView getStatusView() {
         return mStatusView;
     }
 
@@ -260,7 +247,7 @@ public abstract class BaseActivity extends AppCompatActivity implements IView, S
     }
 
     /**
-     * 从Activity生命周期绑定的Disposable中移除Disposable
+     * 从Fragment生命周期绑定的Disposable中移除Disposable
      *
      * @param disposable Disposable
      */
@@ -280,6 +267,15 @@ public abstract class BaseActivity extends AppCompatActivity implements IView, S
     }
 
     /**
+     * toolbar点击返回按钮（只有该Fragment中自己包含StatusToolbar才有效）
+     */
+    public void onNavigationBackPressed() {
+        if (getActivity() != null) {
+            getActivity().onBackPressed();
+        }
+    }
+
+    /**
      * 可以由子类设置覆盖默认的view的Builder
      *
      * @param builder 内容View Builder
@@ -293,6 +289,16 @@ public abstract class BaseActivity extends AppCompatActivity implements IView, S
      * 由子类覆盖该方法，可改变{@link ContentViewBuilder}的属性
      */
     protected void onChangeContentView(ContentViewBuilder builder) {
+    }
+
+
+    /**
+     * 创建状态View
+     *
+     * @return 状态View
+     */
+    protected IStatusView createStatusView() {
+        return new StatusView(getActivity());
     }
 
     /**
@@ -311,17 +317,4 @@ public abstract class BaseActivity extends AppCompatActivity implements IView, S
      */
     @LayoutRes
     protected abstract int getLayout();
-
-    /**
-     * View创建成功回调
-     *
-     * @param contentView 根布局View
-     */
-    protected abstract void onViewCreated(View contentView);
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        ActivityManager.getInstance().popActivity(this);
-    }
 }

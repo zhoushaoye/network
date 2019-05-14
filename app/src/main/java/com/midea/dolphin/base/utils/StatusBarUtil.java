@@ -1,4 +1,4 @@
-package com.midea.dolphin.base.util;
+package com.midea.dolphin.base.utils;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;

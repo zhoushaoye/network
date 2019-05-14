@@ -1,4 +1,4 @@
-package com.midea.dolphin.base.presenter;
+package com.midea.dolphin.base.basepresenter;
 
 import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;

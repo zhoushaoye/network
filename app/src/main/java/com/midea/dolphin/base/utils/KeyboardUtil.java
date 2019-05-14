@@ -1,4 +1,4 @@
-package com.midea.dolphin.base.util;
+package com.midea.dolphin.base.utils;
 
 import android.app.Activity;
 import android.content.Context;

@@ -3,8 +3,6 @@ package com.midea.dolphin.base.view;
 import android.content.Context;
 import android.view.View;
 
-import com.midea.dolphin.base.IStatusView;
-
 
 /**
  * 加载状态的View构造类

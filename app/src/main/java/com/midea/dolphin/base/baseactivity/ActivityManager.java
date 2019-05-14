@@ -1,4 +1,4 @@
-package com.midea.dolphin.base.activity;
+package com.midea.dolphin.base.baseactivity;
 import android.app.Activity;
 
 import java.util.ArrayList;

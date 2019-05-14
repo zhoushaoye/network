@@ -1,4 +1,4 @@
-package com.midea.dolphin.base;
+package com.midea.dolphin.base.view;
 
 import android.content.Context;
 import android.util.AttributeSet;
@@ -12,6 +12,8 @@ import android.widget.FrameLayout;
 import androidx.annotation.NonNull;
 
 import com.midea.dolphin.R;
+import com.midea.dolphin.base.widget.StatusViewProvider;
+import com.midea.dolphin.base.widget.DefaultStatusViewProvider;
 
 
 /**

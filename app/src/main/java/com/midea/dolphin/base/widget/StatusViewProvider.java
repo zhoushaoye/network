@@ -1,4 +1,4 @@
-package com.midea.dolphin.base;
+package com.midea.dolphin.base.widget;
 
 import android.content.Context;
 import android.view.View;

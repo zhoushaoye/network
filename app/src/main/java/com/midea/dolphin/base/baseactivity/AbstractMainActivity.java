@@ -1,10 +1,10 @@
-package com.midea.dolphin.base.activity;
+package com.midea.dolphin.base.baseactivity;
 
 import android.view.View;
 import android.view.ViewStub;
 
 import com.midea.dolphin.R;
-import com.midea.dolphin.base.PageConfig;
+import com.midea.dolphin.base.config.PageConfig;
 
 /**
  * 基础主界面的抽象类

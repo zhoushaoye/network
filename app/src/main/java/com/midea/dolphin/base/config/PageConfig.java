@@ -1,4 +1,4 @@
-package com.midea.dolphin.base;
+package com.midea.dolphin.base.config;
 
 /**
  * 基本的页面配置类

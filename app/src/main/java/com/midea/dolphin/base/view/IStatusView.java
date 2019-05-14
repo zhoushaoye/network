@@ -1,6 +1,8 @@
-package com.midea.dolphin.base;
+package com.midea.dolphin.base.view;
 
 import android.view.View;
+
+import com.midea.dolphin.base.widget.StatusViewProvider;
 
 /**
  * 状态view接口

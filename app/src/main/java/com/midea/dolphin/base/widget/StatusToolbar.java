@@ -16,7 +16,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.widget.Toolbar;
 
 import com.midea.dolphin.R;
-import com.midea.dolphin.base.util.StatusBarUtil;
+import com.midea.dolphin.base.utils.StatusBarUtil;
 
 
 /**

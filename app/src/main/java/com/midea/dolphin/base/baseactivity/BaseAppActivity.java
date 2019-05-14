@@ -1,4 +1,4 @@
-package com.midea.dolphin.base.activity;
+package com.midea.dolphin.base.baseactivity;
 
 
 import android.app.ProgressDialog;
@@ -15,12 +15,12 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 
 import com.midea.dolphin.R;
-import com.midea.dolphin.base.DefaultStatusToolbarConfig;
-import com.midea.dolphin.base.DolphinStatusViewProvider;
-import com.midea.dolphin.base.IStatusToolbarConfig;
-import com.midea.dolphin.base.PageConfig;
-import com.midea.dolphin.base.StatusViewProvider;
-import com.midea.dolphin.base.util.KeyboardUtil;
+import com.midea.dolphin.base.config.DefaultStatusToolbarConfig;
+import com.midea.dolphin.base.widget.DolphinStatusViewProvider;
+import com.midea.dolphin.base.config.IStatusToolbarConfig;
+import com.midea.dolphin.base.config.PageConfig;
+import com.midea.dolphin.base.widget.StatusViewProvider;
+import com.midea.dolphin.base.utils.KeyboardUtil;
 import com.midea.dolphin.base.view.ContentViewBuilder;
 import com.midea.dolphin.base.widget.StatusToolbar;
 

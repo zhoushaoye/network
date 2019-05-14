@@ -1,4 +1,4 @@
-package com.midea.dolphin.base.fragment;
+package com.midea.dolphin.base.basefragment;
 
 import android.app.Activity;
 import android.content.Context;
@@ -7,9 +7,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.midea.dolphin.base.IStatusView;
-import com.midea.dolphin.base.StatusView;
-import com.midea.dolphin.base.StatusViewProvider;
+import com.midea.dolphin.base.view.IStatusView;
+import com.midea.dolphin.base.view.StatusView;
+import com.midea.dolphin.base.widget.StatusViewProvider;
 import com.midea.dolphin.base.mvp.IView;
 import com.midea.dolphin.base.rx.RxLifecycleCompositor;
 import com.midea.dolphin.base.view.LoadViewBuilder;
@@ -26,7 +26,7 @@ import androidx.lifecycle.Lifecycle;
 import io.reactivex.disposables.Disposable;
 
 /**
- * 基础Fragment，所有的Fragment都集成与此Fragment
+ * 基础Fragment弹窗
  *
  * @author zhoudingjun
  * @version 1.0

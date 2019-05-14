@@ -1,4 +1,4 @@
-package com.midea.dolphin.base;
+package com.midea.dolphin.base.config;
 
 import android.app.Activity;
 import android.view.View;
