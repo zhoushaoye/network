@@ -12,12 +12,12 @@ import android.widget.FrameLayout;
 import androidx.annotation.NonNull;
 
 import com.midea.dolphin.R;
-import com.midea.dolphin.base.widget.StatusViewProvider;
-import com.midea.dolphin.base.widget.DefaultStatusViewProvider;
+import com.midea.dolphin.base.widget.DefaultIStatusViewProvider;
+import com.midea.dolphin.base.widget.IStatusViewProvider;
 
 
 /**
- * 状态View，内容由{@link #setStatusViewProvider(StatusViewProvider)}提供
+ * 状态View，内容由{@link #setStatusViewProvider(IStatusViewProvider)}提供
  *
  * @author zhoudingjun
  * @version 1.0
@@ -45,13 +45,13 @@ public class StatusView extends FrameLayout implements IStatusView {
 
     private Animation showAnim;
 
-    private StatusViewProvider mStatusViewProvider;
+    private IStatusViewProvider mIStatusViewProvider;
 
     private OnStatusChangedListener onStatusChangedListener;
 
     private boolean isChanged;
 
-    private static StatusViewProvider defaultStatusViewProvider;
+    private static IStatusViewProvider defaultIStatusViewProvider;
 
     public StatusView(Context context) {
         this(context, null);
@@ -67,8 +67,8 @@ public class StatusView extends FrameLayout implements IStatusView {
     }
 
     private void initView() {
-        if (defaultStatusViewProvider == null) {
-            setDefaultStatusViewProvider(new DefaultStatusViewProvider());
+        if (defaultIStatusViewProvider == null) {
+            setDefaultIStatusViewProvider(new DefaultIStatusViewProvider());
         }
         hideAnim = AnimationUtils.loadAnimation(getContext(), R.anim.status_translucent_exit);
         showAnim = AnimationUtils.loadAnimation(getContext(), R.anim.status_translucent_enter);
@@ -147,35 +147,35 @@ public class StatusView extends FrameLayout implements IStatusView {
         View addView = null;
         switch (status) {
             case STATUS_LOADING:
-                if (mStatusViewProvider != null && loadingView == null) {
-                    loadingView = mStatusViewProvider.getLoadingView(getContext(), this);
-                    if (loadingView == null && defaultStatusViewProvider != null) {
-                        loadingView = defaultStatusViewProvider.getLoadingView(getContext(), this);
+                if (mIStatusViewProvider != null && loadingView == null) {
+                    loadingView = mIStatusViewProvider.getLoadingView(getContext(), this);
+                    if (loadingView == null && defaultIStatusViewProvider != null) {
+                        loadingView = defaultIStatusViewProvider.getLoadingView(getContext(), this);
                     }
                 }
                 addView = loadingView;
                 break;
             case STATUS_ERROR:
-                if (mStatusViewProvider != null && errorView == null) {
-                    errorView = mStatusViewProvider.getErrorView(getContext(), this);
-                    if (errorView == null && defaultStatusViewProvider != null) {
-                        errorView = defaultStatusViewProvider.getErrorView(getContext(), this);
+                if (mIStatusViewProvider != null && errorView == null) {
+                    errorView = mIStatusViewProvider.getErrorView(getContext(), this);
+                    if (errorView == null && defaultIStatusViewProvider != null) {
+                        errorView = defaultIStatusViewProvider.getErrorView(getContext(), this);
                     }
                 }
                 addView = errorView;
                 break;
             case STATUS_EMPTY:
-                if (mStatusViewProvider != null && emptyView == null) {
-                    emptyView = mStatusViewProvider.getEmptyView(getContext(), this);
-                    if (emptyView == null && defaultStatusViewProvider != null) {
-                        emptyView = defaultStatusViewProvider.getEmptyView(getContext(), this);
+                if (mIStatusViewProvider != null && emptyView == null) {
+                    emptyView = mIStatusViewProvider.getEmptyView(getContext(), this);
+                    if (emptyView == null && defaultIStatusViewProvider != null) {
+                        emptyView = defaultIStatusViewProvider.getEmptyView(getContext(), this);
                     }
                 }
                 addView = emptyView;
                 break;
             case STATUS_CONTENT:
-                if (mStatusViewProvider != null && contentView == null) {
-                    contentView = mStatusViewProvider.getContentView(getContext(), this);
+                if (mIStatusViewProvider != null && contentView == null) {
+                    contentView = mIStatusViewProvider.getContentView(getContext(), this);
                 }
                 addView = contentView;
                 break;
@@ -245,11 +245,11 @@ public class StatusView extends FrameLayout implements IStatusView {
     /**
      * 设置View的提供器
      *
-     * @param statusViewProvider 真正的展示内容
+     * @param IStatusViewProvider 真正的展示内容
      */
     @Override
-    public void setStatusViewProvider(StatusViewProvider statusViewProvider) {
-        mStatusViewProvider = statusViewProvider;
+    public void setStatusViewProvider(IStatusViewProvider IStatusViewProvider) {
+        mIStatusViewProvider = IStatusViewProvider;
         showDefaultView();
     }
 
@@ -272,8 +272,8 @@ public class StatusView extends FrameLayout implements IStatusView {
         this.onStatusChangedListener = onStatusChangedListener;
     }
 
-    public static void setDefaultStatusViewProvider(@NonNull StatusViewProvider provider) {
-        defaultStatusViewProvider = provider;
+    public static void setDefaultIStatusViewProvider(@NonNull IStatusViewProvider provider) {
+        defaultIStatusViewProvider = provider;
     }
 
     public interface OnStatusChangedListener {

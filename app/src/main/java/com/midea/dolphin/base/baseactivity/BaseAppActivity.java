@@ -16,10 +16,10 @@ import androidx.appcompat.app.ActionBar;
 
 import com.midea.dolphin.R;
 import com.midea.dolphin.base.config.DefaultStatusToolbarConfig;
-import com.midea.dolphin.base.widget.DolphinStatusViewProvider;
+import com.midea.dolphin.base.widget.DolphinIStatusViewProvider;
 import com.midea.dolphin.base.config.IStatusToolbarConfig;
 import com.midea.dolphin.base.config.PageConfig;
-import com.midea.dolphin.base.widget.StatusViewProvider;
+import com.midea.dolphin.base.widget.IStatusViewProvider;
 import com.midea.dolphin.base.utils.KeyboardUtil;
 import com.midea.dolphin.base.view.ContentViewBuilder;
 import com.midea.dolphin.base.widget.StatusToolbar;
@@ -63,7 +63,7 @@ public abstract class BaseAppActivity extends BaseActivity {
     /**
      * 提供页面各种状态
      */
-    private StatusViewProvider mStatusViewProvider;
+    private IStatusViewProvider mIStatusViewProvider;
 
     /**
      * 更新页面的配置，根据页面不同做不同的配置，有些需要改变的
@@ -86,7 +86,7 @@ public abstract class BaseAppActivity extends BaseActivity {
         // 如果有页面状态。则创建provider 此代码必须在 super.onCreate(savedInstanceState); 之前调用创建
         // 因为super.onCreate(savedInstanceState); 里面有用到provider
         if (mPageConfig.isPageStatusView()) {
-            mStatusViewProvider = new DolphinStatusViewProvider();
+            mIStatusViewProvider = new DolphinIStatusViewProvider();
         }
         super.onCreate(savedInstanceState);
     }
@@ -158,7 +158,7 @@ public abstract class BaseAppActivity extends BaseActivity {
      */
     @Override
     public View getLoadingView(Context context, ViewGroup container) {
-        return mStatusViewProvider.getLoadingView(context, container);
+        return mIStatusViewProvider.getLoadingView(context, container);
     }
 
     /**
@@ -170,7 +170,7 @@ public abstract class BaseAppActivity extends BaseActivity {
      */
     @Override
     public View getEmptyView(Context context, ViewGroup container) {
-        return mStatusViewProvider.getEmptyView(context, container);
+        return mIStatusViewProvider.getEmptyView(context, container);
     }
 
     /**
@@ -182,7 +182,7 @@ public abstract class BaseAppActivity extends BaseActivity {
      */
     @Override
     public View getErrorView(Context context, ViewGroup container) {
-        return mStatusViewProvider.getErrorView(context, container);
+        return mIStatusViewProvider.getErrorView(context, container);
     }
 
     /**

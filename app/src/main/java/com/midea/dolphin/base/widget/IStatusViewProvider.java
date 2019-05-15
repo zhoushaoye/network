@@ -11,7 +11,7 @@ import android.view.ViewGroup;
  * @version 1.0
  * @since 2019/5/14
  */
-public interface StatusViewProvider {
+public interface IStatusViewProvider {
 
     /**
      * 提供空白view

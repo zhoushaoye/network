@@ -13,7 +13,7 @@ import android.view.ViewGroup;
 import com.midea.dolphin.R;
 import com.midea.dolphin.base.view.IStatusView;
 import com.midea.dolphin.base.view.StatusView;
-import com.midea.dolphin.base.widget.StatusViewProvider;
+import com.midea.dolphin.base.widget.IStatusViewProvider;
 import com.midea.dolphin.base.mvp.IView;
 import com.midea.dolphin.base.rx.RxLifecycleCompositor;
 import com.midea.dolphin.base.view.ContentViewBuilder;
@@ -38,7 +38,7 @@ import io.reactivex.disposables.Disposable;
  * @version 1.0
  * @since 2019/5/14
  */
-public abstract class BaseFragment extends Fragment implements IView, StatusViewProvider {
+public abstract class BaseFragment extends Fragment implements IView, IStatusViewProvider {
 
     /**
      * 绑定Activity生命周期提供器

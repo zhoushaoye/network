@@ -2,7 +2,7 @@ package com.midea.dolphin.base.view;
 
 import android.view.View;
 
-import com.midea.dolphin.base.widget.StatusViewProvider;
+import com.midea.dolphin.base.widget.IStatusViewProvider;
 
 /**
  * 状态view接口
@@ -56,8 +56,8 @@ public interface IStatusView {
 
     /**
      * 状态View提供器
-     * @param provider StatusViewProvider
+     * @param provider IStatusViewProvider
      */
-    void setStatusViewProvider(StatusViewProvider provider);
+    void setStatusViewProvider(IStatusViewProvider provider);
 
 }
