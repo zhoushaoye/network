@@ -9,8 +9,7 @@ import com.midea.dolphin.base.config.PageConfig;
 /**
  * 基础主界面的抽象类
  * 提供基础的主界面管理
- * 支持的样式为，下面4个tab
- * 上面显示body内容
+ * 支持的样式为，下面5个tab(根据美居项目定制)
  * @author zhoudingjun
  * @version 1.0
  * @since 2019/5/14
