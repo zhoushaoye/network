@@ -7,6 +7,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.midea.dolphin.base.utils.ActivityManager;
 import com.midea.dolphin.base.view.IStatusView;
 import com.midea.dolphin.base.view.StatusView;
 import com.midea.dolphin.base.widget.StatusViewProvider;
@@ -62,7 +63,7 @@ public abstract class BaseActivity extends AppCompatActivity implements IView, S
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        ActivityStackManager.getInstance().pushActivity(this);
+        ActivityManager.getInstance().pushActivity(this);
         int layoutRes = getLayout();
         if (layoutRes != 0) {
             setContentView(layoutRes);
@@ -322,6 +323,6 @@ public abstract class BaseActivity extends AppCompatActivity implements IView, S
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        ActivityStackManager.getInstance().popActivity(this);
+        ActivityManager.getInstance().popActivity(this);
     }
 }

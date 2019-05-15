@@ -1,4 +1,5 @@
-package com.midea.dolphin.base.baseactivity;
+package com.midea.dolphin.base.utils;
+
 import android.app.Activity;
 
 import java.util.ArrayList;
@@ -13,17 +14,17 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
  * @version 1.0
  * @since 2019/5/14
  */
-public class ActivityStackManager {
+public class ActivityManager {
 
     private List<Activity> activityList = new ArrayList<>();
 
-    private static ActivityStackManager instance;
+    private static ActivityManager instance;
 
     private boolean newTask;
 
-    public static ActivityStackManager getInstance() {
+    public static ActivityManager getInstance() {
         if (instance == null) {
-            instance = new ActivityStackManager();
+            instance = new ActivityManager();
         }
         return instance;
     }
@@ -31,7 +32,7 @@ public class ActivityStackManager {
     /**
      * 仅仅从列表中移除某个Activity
      */
-    void popActivity(Activity activity) {
+    public void popActivity(Activity activity) {
         if (activity != null) {
             activityList.remove(activity);
         }
@@ -40,7 +41,7 @@ public class ActivityStackManager {
     /**
      * 推入某个Activity
      */
-    void pushActivity(Activity activity) {
+    public void pushActivity(Activity activity) {
         if (newTask) {
             activityList = new ArrayList<>();
             newTask = false;
