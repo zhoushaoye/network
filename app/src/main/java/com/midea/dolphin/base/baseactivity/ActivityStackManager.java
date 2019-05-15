@@ -13,17 +13,17 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
  * @version 1.0
  * @since 2019/5/14
  */
-public class ActivityManager {
+public class ActivityStackManager {
 
     private List<Activity> activityList = new ArrayList<>();
 
-    private static ActivityManager instance;
+    private static ActivityStackManager instance;
 
     private boolean newTask;
 
-    public static ActivityManager getInstance() {
+    public static ActivityStackManager getInstance() {
         if (instance == null) {
-            instance = new ActivityManager();
+            instance = new ActivityStackManager();
         }
         return instance;
     }

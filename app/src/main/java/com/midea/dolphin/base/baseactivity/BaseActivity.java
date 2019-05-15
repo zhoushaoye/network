@@ -62,7 +62,7 @@ public abstract class BaseActivity extends AppCompatActivity implements IView, S
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        ActivityManager.getInstance().pushActivity(this);
+        ActivityStackManager.getInstance().pushActivity(this);
         int layoutRes = getLayout();
         if (layoutRes != 0) {
             setContentView(layoutRes);
@@ -322,6 +322,6 @@ public abstract class BaseActivity extends AppCompatActivity implements IView, S
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        ActivityManager.getInstance().popActivity(this);
+        ActivityStackManager.getInstance().popActivity(this);
     }
 }
