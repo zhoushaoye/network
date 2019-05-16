@@ -2,6 +2,10 @@ package com.midea.dolphin.base.config;
 
 /**
  * 基本的页面配置类
+ *
+ * @author zhoudingjun
+ * @version 1.0
+ * @since 2019/5/14
  */
 public class PageConfig {
 
