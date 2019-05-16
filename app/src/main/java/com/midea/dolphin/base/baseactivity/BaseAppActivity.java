@@ -16,7 +16,7 @@ import androidx.appcompat.app.ActionBar;
 
 import com.midea.dolphin.R;
 import com.midea.dolphin.base.config.DefaultStatusToolbarConfig;
-import com.midea.dolphin.base.widget.DolphinIStatusViewProvider;
+import com.midea.dolphin.base.widget.DolphinStatusViewProvider;
 import com.midea.dolphin.base.config.IStatusToolbarConfig;
 import com.midea.dolphin.base.config.PageConfig;
 import com.midea.dolphin.base.widget.IStatusViewProvider;
@@ -85,7 +85,7 @@ public abstract class BaseAppActivity extends BaseActivity {
         // 如果有页面状态。则创建provider 此代码必须在 super.onCreate(savedInstanceState); 之前调用创建
         // 因为super.onCreate(savedInstanceState); 里面有用到provider
         if (mPageConfig.isPageStatusView()) {
-            mIStatusViewProvider = new DolphinIStatusViewProvider();
+            mIStatusViewProvider = new DolphinStatusViewProvider();
         }
         super.onCreate(savedInstanceState);
     }
