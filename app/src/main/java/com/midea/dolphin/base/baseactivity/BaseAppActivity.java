@@ -29,8 +29,7 @@ import butterknife.Unbinder;
 
 /**
  *  基础Activity
- * <p>
- * 提供的功能
+ *  提供的功能
  * 1. 工具栏
  * 2. 状态栏
  * 3. 页面加载状态
